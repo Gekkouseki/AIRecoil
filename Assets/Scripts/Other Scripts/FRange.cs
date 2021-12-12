@@ -26,6 +26,12 @@ public class FRange
         m_value = Mathf.Clamp(m_value, minValue, maxValue);
     }
 
+    public float RandomValue()
+    {
+        m_value = Random.Range(minValue, maxValue);
+        return m_value;
+    }
+
     public float DiffValue(float value)
     {
         m_value = value;

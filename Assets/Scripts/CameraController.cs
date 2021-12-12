@@ -5,7 +5,7 @@ using UnityEngine;
 public class CameraController : MonoBehaviour
 {
     [SerializeField]
-    private bool AIMode = true;
+    private AiInformation AI;
 
     [Header("Normal Information")]
     [SerializeField]
@@ -25,6 +25,9 @@ public class CameraController : MonoBehaviour
 
     [SerializeField]
     private float m_AiRotateSpeed = 1.0f;
+    [SerializeField]
+    private FRange m_AiAddSpeed;
+    private float aiAddSpeed = 0.0f;
     [SerializeField]
     private AnimationCurve brakingErrorCurve;
     [SerializeField]
@@ -46,10 +49,10 @@ public class CameraController : MonoBehaviour
     private Vector2 cameraCenter;
     private float maxDist;
 
-    #region Unity Method
+    #region Common Method
     private void Start()
     {
-        if (!AIMode)
+        if (!AI.AIMode)
             Cursor.lockState = CursorLockMode.Locked;
 
         cameraCenter = new Vector2(Screen.width / 2, Screen.height / 2);
@@ -58,7 +61,7 @@ public class CameraController : MonoBehaviour
 
     private void Update()
     {
-        if (AIMode)
+        if (AI.AIMode)
             AIUpdate();
         else
             NormalUpdate();
@@ -66,6 +69,19 @@ public class CameraController : MonoBehaviour
     private void OnValidate()
     {
         fRangeX.OnValidate();
+    }
+
+    public void ShootingMove(float angleX, float angleY)
+    {
+        transY.Rotate(Vector3.up, angleX * m_rotateSpeed * Time.deltaTime);
+
+        var eAngle = transX.localEulerAngles;
+        eAngle.x -= angleY * m_rotateSpeed * Time.deltaTime;
+        if (eAngle.x > fRangeX.MaxValue && eAngle.x < 180)
+            eAngle.x = fRangeX.MaxValue;
+        if (eAngle.x < fRangeX.MinValue && eAngle.x > 180)
+            eAngle.x = fRangeX.MinValue;
+        transX.localEulerAngles = eAngle;
     }
 
     #endregion
@@ -107,6 +123,7 @@ public class CameraController : MonoBehaviour
             var addPos = RandomVec3().normalized * brakingError;
             fromTargePos = nTargetPos;
             toTargetPos = targetTrans.position + addPos;
+            aiAddSpeed = m_AiAddSpeed.RandomValue();
         }
     }
 
@@ -115,7 +132,7 @@ public class CameraController : MonoBehaviour
         var toVec = Vector3.ProjectOnPlane(nTargetPos - transHead.position, Vector3.up);
         var fromVec = Vector3.ProjectOnPlane(transHead.forward, Vector3.up);
         var angle = Vector3.SignedAngle(fromVec, toVec, Vector3.up);
-        var r = angle * m_AiRotateSpeed * Time.deltaTime;
+        var r = angle * (m_AiRotateSpeed + aiAddSpeed) * Time.deltaTime;
         transY.Rotate(Vector3.up, r);
     }
 
@@ -125,7 +142,7 @@ public class CameraController : MonoBehaviour
         var fromVec = Vector3.ProjectOnPlane(transHead.forward, Vector3.right);
         var addY = Vector3.SignedAngle(fromVec, toVec, Vector3.right);
         var eAngle = transX.localEulerAngles;
-        var r = addY * m_AiRotateSpeed * Time.deltaTime;
+        var r = addY * (m_AiRotateSpeed + aiAddSpeed) * Time.deltaTime;
         eAngle.x += r;
         if (eAngle.x > fRangeX.MaxValue && eAngle.x < 180)
             eAngle.x = fRangeX.MaxValue;
