@@ -36,6 +36,8 @@ public class ShootingController : MonoBehaviour
     [Header("AI Information")]
     [SerializeField]
     private LayerMask aiShotMask;
+    [SerializeField]
+    private bool debugView;
 
     private void Update()
     {
@@ -73,6 +75,8 @@ public class ShootingController : MonoBehaviour
         {
             Shooting();
         }
+        if (debugView)
+            Debug.DrawRay(ray.origin, ray.direction * shootingRange, Color.red, 1.0f);
     }
 
     private void Shooting()

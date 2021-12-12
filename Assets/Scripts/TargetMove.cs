@@ -7,17 +7,30 @@ public class TargetMove : MonoBehaviour
 {
     public enum MoveMode
     {
+        None,
         Manual,
         Box,
         Circle,
         RandomRange,
+        Warp,
     }
+
+    public static MoveMode Mode;
 
     [SerializeField]
     private MoveMode mode;
 
     [SerializeField]
-    private float moveSpeed = 1.0f;
+    private float manualMoveSpeed = 1.0f;
+    [SerializeField]
+    private float boxMoveSpeed = 1.0f;
+    [SerializeField]
+    private float circleMoveSpeed = 1.0f;
+    [SerializeField]
+    private float randomMoveSpeed = 1.0f;
+    [SerializeField]
+    private float warpMoveSpeed = 1.0f;
+    private float countTime = 0.0f;
     private Vector3 startPos;
 
     [SerializeField]
@@ -29,6 +42,8 @@ public class TargetMove : MonoBehaviour
     private void Start()
     {
         startPos = transform.position;
+        if (Mode != MoveMode.None)
+            mode = Mode;
         switch (mode)
         {
             case MoveMode.Box:
@@ -45,6 +60,9 @@ public class TargetMove : MonoBehaviour
             case MoveMode.RandomRange:
                 RandomMove();
                 break;
+            case MoveMode.Warp:
+                WarpMove();
+                break;
         }
     }
 
@@ -58,22 +76,27 @@ public class TargetMove : MonoBehaviour
             case MoveMode.Circle:
                 CircleMove();
                 break;
+            case MoveMode.Warp:
+                countTime -= Time.deltaTime;
+                if (countTime <= 0.0f)
+                    WarpMove();
+                break;
         }
     }
 
     private void ManualMove()
     {
         Vector3 moveVec;
-        moveVec.x = Input.GetAxis("Horizontal") * moveSpeed * Time.deltaTime;
-        moveVec.y = (Input.GetKey(KeyCode.Space) ? moveSpeed : Input.GetKey(KeyCode.LeftShift) ? -moveSpeed : 0) * Time.deltaTime;
-        moveVec.z = Input.GetAxis("Vertical") * moveSpeed * Time.deltaTime;
+        moveVec.x = Input.GetAxis("Horizontal") * manualMoveSpeed * Time.deltaTime;
+        moveVec.y = (Input.GetKey(KeyCode.Space) ? manualMoveSpeed : Input.GetKey(KeyCode.LeftShift) ? -manualMoveSpeed : 0) * Time.deltaTime;
+        moveVec.z = Input.GetAxis("Vertical") * manualMoveSpeed * Time.deltaTime;
 
         transform.Translate(moveVec);
     }
 
     private void BoxMove()
     {
-        transform.DOMove(boxPosArray[boxPosIndex], (2 * moveRange) / moveSpeed)
+        transform.DOMove(boxPosArray[boxPosIndex], (2 * moveRange) / boxMoveSpeed)
             .OnComplete(() =>
             {
                 boxPosIndex++;
@@ -85,16 +108,22 @@ public class TargetMove : MonoBehaviour
 
     private void CircleMove()
     {
-        transform.RotateAround(startPos, Vector3.forward, moveSpeed * Time.deltaTime);
+        transform.RotateAround(startPos, Vector3.forward, circleMoveSpeed * Time.deltaTime);
     }
 
     private void RandomMove()
     {
-        transform.DOMove(RandomPos() + startPos, moveSpeed * 2)
+        transform.DOMove(RandomPos() + startPos, randomMoveSpeed)
             .OnComplete(() =>
             {
                 RandomMove();
             });
+    }
+
+    private void WarpMove()
+    {
+        transform.position = (RandomPos() / 2) + startPos;
+        countTime = warpMoveSpeed;
     }
 
     private Vector3 RandomPos()

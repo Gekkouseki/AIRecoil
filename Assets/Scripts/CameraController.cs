@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
 
 public class CameraController : MonoBehaviour
 {
@@ -28,6 +29,8 @@ public class CameraController : MonoBehaviour
     [SerializeField]
     private FRange m_AiAddSpeed;
     private float aiAddSpeed = 0.0f;
+    private Tween addSpeedTween;
+
     [SerializeField]
     private AnimationCurve brakingErrorCurve;
     [SerializeField]
@@ -35,6 +38,7 @@ public class CameraController : MonoBehaviour
     [SerializeField, ReadOnly]
     private float brakingError;
 
+    [Header("Common Information")]
     [SerializeField]
     private Transform transHead;
     [SerializeField]
@@ -123,7 +127,7 @@ public class CameraController : MonoBehaviour
             var addPos = RandomVec3().normalized * brakingError;
             fromTargePos = nTargetPos;
             toTargetPos = targetTrans.position + addPos;
-            aiAddSpeed = m_AiAddSpeed.RandomValue();
+            addSpeedTween = DOTween.To(x => aiAddSpeed = x, m_AiAddSpeed.Value, m_AiAddSpeed.RandomValue(), m_TargetSetDelayTime);
         }
     }
 
